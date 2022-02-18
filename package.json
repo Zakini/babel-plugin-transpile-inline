@@ -1,0 +1,9 @@
+{
+  "name": "babel-plugin-transpile-inline",
+  "version": "1.0.0",
+  "description": "Babel plugin for transforming files before importing them as strings",
+  "repository": "git@github.com:Zakini/babel-plugin-transpile-inline.git",
+  "author": "Josh Wells <josh@zakini.co.uk>",
+  "license": "MIT",
+  "private": false
+}
