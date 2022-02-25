@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
   "include": ["plugin/**/*"],
+  "files": ["global.d.ts"],
   "compilerOptions": {
     "outDir": "dist"
   }
