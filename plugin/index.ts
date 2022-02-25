@@ -1,15 +1,36 @@
 import { dirname } from 'path'
 import resolveFrom from 'resolve-from'
-import { transformFileSync as transformFile, PluginObj, types as t } from '@babel/core'
+import { transformFileSync as transformFile, PluginObj, types as t, PluginPass } from '@babel/core'
+import { isMatch as match } from 'micromatch'
 
 type Plugin = () => PluginObj
+type Options = {
+  imports?: unknown,
+  files?: unknown,
+}
+type State = PluginPass & Options
+
+const isValidOption = (value: unknown): value is string | string[] | null =>
+  typeof value === 'string'
+    || (Array.isArray(value) && value.every(v => typeof v === 'string'))
+    || value === null
 
 const TranspileInline: Plugin = () => ({
   visitor: {
     ImportDeclaration: {
-      exit(path, state) {
-        if (path.node.specifiers.length > 1) {
-          throw path.buildCodeFrameError('Cannot use named imports for inlined imports')
+      exit(path, state: State) {
+        const { imports = null, files = null } = state
+
+        if (!imports && !files) {
+          throw new Error('You must specific at least one of \'imports\' or \'files\'')
+        }
+
+        if (!isValidOption(imports)) {
+          throw new Error('\'imports\' must be a string or string array')
+        }
+
+        if (!isValidOption(files)) {
+          throw new Error('\'files\' must be a string or string array')
         }
 
         if (!state.file.opts.filename) {
@@ -18,6 +39,14 @@ const TranspileInline: Plugin = () => ({
 
         const importPath = path.node.source.value
         const absoluteImportPath = resolveFrom(dirname(state.file.opts.filename), importPath)
+        if ((imports && !match(importPath, imports)) && (files && !match(absoluteImportPath, files))) {
+          return
+        }
+
+        if (path.node.specifiers.length > 1) {
+          throw path.buildCodeFrameError('Cannot use named imports for inlined imports')
+        }
+
         const variableName = path.node.specifiers[0].local.name
         const transpiledContent = transformFile(absoluteImportPath)?.code
 
