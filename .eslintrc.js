@@ -22,4 +22,21 @@ module.exports = {
     'quotes': ['error', 'single'],
     'comma-dangle': ['error', 'always-multiline'],
   },
+  'overrides': [
+    {
+      'files': 'tests/**',
+      'rules': {
+        '@typescript-eslint/ban-ts-comment': 'off',
+      },
+    },
+    {
+      'files': 'tests/**/fixtures/**/*',
+      'rules': {
+        // babel applies some style changes, so need to match those in input
+        // fixtures when asserting that a file hasn't changed
+        'semi': ['error', 'always'],
+        'quotes': ['error', 'double'],
+      },
+    },
+  ],
 }

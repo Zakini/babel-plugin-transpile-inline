@@ -4,11 +4,11 @@ import { transformFileSync as transformFile, PluginObj, types as t, PluginPass }
 import { isMatch as match } from 'micromatch'
 
 type Plugin = () => PluginObj
-type Options = {
+export type Options = {
   imports?: unknown,
   files?: unknown,
 }
-type State = PluginPass & Options
+type State = PluginPass & { opts: Options }
 
 const isValidOption = (value: unknown): value is string | string[] | null =>
   typeof value === 'string'
@@ -19,7 +19,7 @@ const TranspileInline: Plugin = () => ({
   visitor: {
     ImportDeclaration: {
       exit(path, state: State) {
-        const { imports = null, files = null } = state
+        const { imports = null, files = null } = state.opts
 
         if (!imports && !files) {
           throw new Error('You must specific at least one of \'imports\' or \'files\'')
@@ -39,11 +39,14 @@ const TranspileInline: Plugin = () => ({
 
         const importPath = path.node.source.value
         const absoluteImportPath = resolveFrom(dirname(state.file.opts.filename), importPath)
-        if ((imports && !match(importPath, imports)) && (files && !match(absoluteImportPath, files))) {
+
+        const importsMatch = imports && match(importPath, imports, { contains: true })
+        const filesMatch = files && match(absoluteImportPath, files, { contains: true })
+        if (!importsMatch && !filesMatch) {
           return
         }
 
-        if (path.node.specifiers.length > 1) {
+        if (path.node.specifiers.length > 1 || path.node.specifiers[0].type !== 'ImportDefaultSpecifier') {
           throw path.buildCodeFrameError('Cannot use named imports for inlined imports')
         }
 
