@@ -45,6 +45,24 @@ describe('transpile inline plugin', () => {
 
       expect(run(inputPath, pluginOptions)).toMatch(output)
     })
+
+    it('should inline import * imports that match imports option', () => {
+      const inputPath = fixturePath('input/import-all.js')
+      const pluginOptions = { imports: 'named-export' }
+
+      const output = readFixture('output/import-all.js')
+
+      expect(run(inputPath, pluginOptions)).toMatch(output)
+    })
+
+    it('should inline import * imports that match files option', () => {
+      const inputPath = fixturePath('input/import-all.js')
+      const pluginOptions = { files: 'fixtures/**/*.js' }
+
+      const output = readFixture('output/import-all.js')
+
+      expect(run(inputPath, pluginOptions)).toMatch(output)
+    })
   })
 
   describe('failures', () => {
